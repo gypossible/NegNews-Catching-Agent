@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NegNews-Catching Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #e85d4a;
+      --accent2: #f0a500;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --tag-bg: #1f2937;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, #0d1117 0%, #1a0a0a 50%, #0d1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 24px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(232,93,74,.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(232,93,74,.15);
+      border: 1px solid rgba(232,93,74,.4);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      margin-bottom: 16px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin: 0 auto 32px;
+    }
+    .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity .2s, transform .15s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover { opacity: .85; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+
+    /* ── Layout ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    section { padding: 64px 0; }
+    section + section { border-top: 1px solid var(--border); }
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 12px; }
+    .subtitle { color: var(--muted); margin-bottom: 40px; }
+
+    /* ── Feature cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color .2s, transform .2s;
+    }
+    .card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .card-icon {
+      font-size: 28px;
+      margin-bottom: 14px;
+    }
+    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .card p { font-size: .875rem; color: var(--muted); }
+
+    /* ── How it works ── */
+    .steps { display: flex; flex-direction: column; gap: 0; }
+    .step {
+      display: flex;
+      gap: 20px;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(232,93,74,.15);
+      border: 1px solid rgba(232,93,74,.4);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: .9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .step-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .step-body p { font-size: .875rem; color: var(--muted); }
+
+    /* ── Sources ── */
+    .sources-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .source-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .source-card .name { font-weight: 700; margin-bottom: 6px; }
+    .source-card .desc { font-size: .8rem; color: var(--muted); margin-bottom: 10px; }
+    .tag {
+      display: inline-block;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: .7rem;
+      padding: 2px 8px;
+      color: var(--muted);
+    }
+    .tag.green { border-color: #2ea043; color: #3fb950; background: rgba(46,160,67,.1); }
+    .tag.yellow { border-color: #9e6a03; color: var(--accent2); background: rgba(240,165,0,.1); }
+    .tag.red { border-color: #da3633; color: #f85149; background: rgba(218,54,51,.1); }
+
+    /* ── Code block ── */
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: .8rem;
+      color: var(--muted);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.r { background: #ff5f57; }
+    .dot.y { background: #febc2e; }
+    .dot.g { background: #28c840; }
+    pre {
+      padding: 20px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: .82rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      color: #c9d1d9;
+    }
+    .kw { color: #ff7b72; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; font-style: italic; }
+    .fn { color: #d2a8ff; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">🔍 负面舆情监控工具</div>
+  <h1>NegNews-<span>Catching</span> Agent</h1>
+  <p>自动化批量搜索企业负面舆情，覆盖债券违约、商票逾期、失信被执行、欠税等风险维度，结果直写 Excel。</p>
+  <div class="btn-group">
+    <a href="https://github.com/gypossible/NegNews-Catching-Agent" class="btn btn-primary">
+      ⭐ GitHub 仓库
+    </a>
+    <a href="#quickstart" class="btn btn-outline">快速开始 →</a>
+  </div>
+</section>
+
+<!-- Features -->
+<section>
+  <div class="container">
+    <div class="section-label">核心能力</div>
+    <h2>一键批量，结果回写 Excel</h2>
+    <p class="subtitle">上传 Excel，运行脚本，负面舆情自动填入对应行。</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>Excel 驱动</h3>
+        <p>读取每个 Sheet 的 B 列主体名称，结果从 C 列起逐格写入，格式统一。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <h3>多源聚合</h3>
+        <p>同时检索百度新闻、新浪财经、执行信息公开网、企查查，去重后输出。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📅</div>
+        <h3>近一年过滤</h3>
+        <p>自动过滤超过 365 天的旧数据，只保留近期有效舆情。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <h3>容错运行</h3>
+        <p>单个数据源失败不影响整体，自动跳过并记录警告，保证全量处理。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section>
+  <div class="container">
+    <div class="section-label">工作流程</div>
+    <h2>四步完成舆情扫描</h2>
+    <p class="subtitle">从 Excel 输入到结果回写，全程自动化。</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>读取 Excel</h3>
+          <p>遍历所有 Sheet，提取 B 列每行的主体名称（第 2 行起）。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>多源并行搜索</h3>
+          <p>对每个主体 × 每个关键词（债券违约 / 商票逾期 / 失信被执行 / 欠税）逐一调用各数据源。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>过滤 & 去重</h3>
+          <p>按日期过滤近一年数据，按 URL 去重，最多保留 10 条结果。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>回写 & 保存</h3>
+          <p>每条结果写入对应行 C 列起的单元格，格式：<code>[来源] 日期 | 标题 | URL</code>，保存原文件。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Sources -->
+<section>
+  <div class="container">
+    <div class="section-label">数据来源</div>
+    <h2>覆盖主流公开渠道</h2>
+    <p class="subtitle">无需付费 API，基于公开网络数据。</p>
+    <div class="sources-grid">
+      <div class="source-card">
+        <div class="name">百度新闻</div>
+        <div class="desc">全网新闻聚合，覆盖债券违约、商票逾期等媒体报道。</div>
+        <span class="tag yellow">需国内 IP</span>
+      </div>
+      <div class="source-card">
+        <div class="name">新浪财经</div>
+        <div class="desc">财经垂直媒体，企业负面事件报道质量高。</div>
+        <span class="tag green">稳定</span>
+      </div>
+      <div class="source-card">
+        <div class="name">执行信息公开网</div>
+        <div class="desc">最高人民法院官方平台，失信被执行人权威数据。</div>
+        <span class="tag green">官方 API</span>
+      </div>
+      <div class="source-card">
+        <div class="name">企查查</div>
+        <div class="desc">企业风险数据聚合，需配置浏览器 Cookie 使用。</div>
+        <span class="tag red">需 Cookie</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Start -->
+<section id="quickstart">
+  <div class="container">
+    <div class="section-label">快速开始</div>
+    <h2>三行命令跑起来</h2>
+    <p class="subtitle">Python 3.10+ 环境，安装依赖后即可运行。</p>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span>Terminal</span>
+      </div>
+      <pre><span class="cm"># 1. 克隆仓库</span>
+<span class="kw">git</span> clone https://github.com/gypossible/NegNews-Catching-Agent.git
+<span class="kw">cd</span> NegNews-Catching-Agent
+
+<span class="cm"># 2. 安装依赖</span>
+<span class="kw">pip</span> install -r requirements.txt
+
+<span class="cm"># 3. 运行（替换为你的 Excel 文件路径）</span>
+<span class="kw">python</span> main.py 你的文件.xlsx
+
+<span class="cm"># 可选：配置企查查 Cookie</span>
+<span class="kw">export</span> QCC_COOKIE=<span class="str">"从浏览器复制的 Cookie 字符串"</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>NegNews-Catching Agent · 开源项目 ·
+    <a href="https://github.com/gypossible/NegNews-Catching-Agent">github.com/gypossible/NegNews-Catching-Agent</a>
+  </p>
+</footer>
+
+</body>
+</html>
