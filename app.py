@@ -6,11 +6,17 @@ NegNews-Catching Agent — Flask Web Server
 
 import io
 import os
+import sys
 import json
 import queue
 import threading
 import uuid
 from pathlib import Path
+
+# 确保项目根目录在 sys.path 中（gunicorn 启动时可能不包含）
+BASE_DIR = Path(__file__).parent.resolve()
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 from flask import Flask, request, jsonify, send_file, Response
 
