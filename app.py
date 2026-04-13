@@ -12,7 +12,7 @@ import threading
 import uuid
 from pathlib import Path
 
-from flask import Flask, request, jsonify, send_file, Response, send_from_directory
+from flask import Flask, request, jsonify, send_file, Response
 
 import config
 from modules.excel_handler import load_workbook, iter_entities, save_workbook
@@ -23,7 +23,9 @@ from modules.searchers.court_searcher import CourtSearcher
 from modules.searchers.qichacha_searcher import QiChaChaSearcher
 from utils.http_client import build_session
 
-app = Flask(__name__, static_folder=".", static_url_path="")
+BASE_DIR = Path(__file__).parent.resolve()
+
+app = Flask(__name__, static_folder=str(BASE_DIR), static_url_path="")
 
 # task_id -> {"queue": Queue, "result": bytes, "filename": str}
 _tasks: dict[str, dict] = {}
@@ -92,7 +94,7 @@ def _run_task(task_id: str, file_bytes: bytes, original_filename: str):
 
 @app.route("/")
 def index():
-    return send_from_directory(".", "index.html")
+    return send_file(str(BASE_DIR / "index.html"))
 
 
 @app.route("/upload", methods=["POST"])
